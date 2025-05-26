@@ -55,9 +55,7 @@ _|"""""|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""|
 			dashboard.section.header.val = vim.split(logo, "\n")
 			dashboard.section.buttons.val = {
 				dashboard.button("f", "󰱼 " .. " Find file", ":FzfLua files <CR>"),
-				dashboard.button("n", "󰣕 " .. " New file", ":ene <BAR> startinsert <CR>"),
 				dashboard.button("r", " " .. " Recent files", ":FzfLua oldfiles <CR>"),
-				dashboard.button("e", " " .. " File Explorer", ":lua MiniFiles.open() <CR>"),
 				dashboard.button("g", " " .. " Find text", ":FzfLua live_grep <CR>"),
 				dashboard.button("s", " " .. " Git Status", ":LazyGit <CR>"),
 				dashboard.button("c", " " .. " Config", ":e $MYVIMRC <CR>"),
@@ -154,19 +152,16 @@ _|"""""|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""|
 	--         require("fidget").setup {}
 	--     end,
 	-- },
-	{
-		"utilyre/barbecue.nvim",
-		name = "barbecue",
-		version = "*",
-		event = "BufRead",
-		dependencies = {
-			"SmiteshP/nvim-navic",
-			"nvim-tree/nvim-web-devicons", -- optional dependency
-		},
-		opts = {
-			-- configurations go here
-		},
-	},
+    {
+        'Bekaboo/dropbar.nvim',
+        opts = {},
+        config = function()
+            local dropbar_api = require('dropbar.api')
+            vim.keymap.set('n', '<Leader>;', dropbar_api.pick, { desc = 'Pick symbols in winbar' })
+            vim.keymap.set('n', '[;', dropbar_api.goto_context_start, { desc = 'Go to start of current context' })
+            vim.keymap.set('n', '];', dropbar_api.select_next_context, { desc = 'Select next context' })
+        end
+    },
 	-- lazy.nvim
 	-- {
 	--     "m4xshen/hardtime.nvim",
@@ -250,44 +245,28 @@ _|"""""|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""|
 			-- configuration goes here
 		},
 	},
-	-- {
-	-- 	"stevearc/dressing.nvim",
-	-- 	lazy = true,
-	-- 	init = function()
-	-- 		---@diagnostic disable-next-line: duplicate-set-field
-	-- 		vim.ui.select = function(...)
-	-- 			require("lazy").load({ plugins = { "dressing.nvim" } })
-	-- 			return vim.ui.select(...)
-	-- 		end
-	-- 		---@diagnostic disable-next-line: duplicate-set-field
-	-- 		vim.ui.input = function(...)
-	-- 			require("lazy").load({ plugins = { "dressing.nvim" } })
-	-- 			return vim.ui.input(...)
-	-- 		end
-	-- 	end,
-	-- },
 	{
 		"folke/todo-comments.nvim",
 		event = "VimEnter",
 		dependencies = { "nvim-lua/plenary.nvim" },
 		opts = { signs = false },
 	},
-	{
-		"echasnovski/mini.files",
-		version = false,
-		opts = {},
-		config = function()
-			require("mini.files").setup()
-		end,
-		vim.keymap.set("n", "<leader>pv", ":lua MiniFiles.open()<CR>"),
-	},
+    {
+        'stevearc/oil.nvim',
+        ---@module 'oil'
+        ---@type oil.SetupOpts
+        opts = {},
+        dependencies = { "nvim-tree/nvim-web-devicons" },
+        lazy = false,
+        config = function ()
+            require("oil").setup()
+            vim.keymap.set("n", "-", "<CMD>Oil<CR>", { desc = "Open parent directory" })
+        end
+    },
 	{
 		"folke/which-key.nvim",
 		event = "VeryLazy",
 		opts = {
-			-- your configuration comes here
-			-- or leave it empty to use the default settings
-			-- refer to the configuration section below
 		},
 		keys = {
 			{
