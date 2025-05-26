@@ -18,11 +18,6 @@ I use markdown-preview.nvim to see what I am writing and actually read my notes
 I use vimtex for my $\LaTeX$ editing \
 Screenshots comming soon...
 
-## Git Integration
-
-I use the amazing fugit2.nvim plugin along with gitsigns.nvim for my git integration
-![Screenshot of my fugit2.nvim integration](<./screenshots/Screenshot 2024-07-09 at 11.12.35 PM.png>) 
-
 ## LSP and Completion Integration
 
 I use nvim-lspconfig and mason.nvim for my LSP integration. I use conform.nvim for formatting and null-ls for other linters. With LSP, I also use trouble.nvim to visualize errors and hints better. I use nvim-cmp for completions.
