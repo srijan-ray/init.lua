@@ -15,7 +15,7 @@ return {
             },
             { "j-hui/fidget.nvim", opts = {} },
         },
-        config = function ()
+        config = function()
             -- Some UI edits
             vim.lsp.inlay_hint.enable()
             vim.diagnostic.config({
@@ -65,7 +65,7 @@ return {
                         {
                             name = "@vue/typescript-plugin",
                             location = "/usr/local/lib/node_modules/@vue/typescript-plugin",
-                            languages = {"javascript", "typescript", "vue"},
+                            languages = { "javascript", "typescript", "vue" },
                         },
                     },
                 },
@@ -82,7 +82,9 @@ return {
             -- Keymaps
             local fzf = require("fzf-lua")
             vim.keymap.set("n", '<leader>ca', fzf.lsp_code_actions, { desc = "[C]ode [A]ctions" })
-
+            vim.keymap.set("n", '<leader>gr', fzf.lsp_references, { desc = "[G]o to [R]eferences" })
+            vim.keymap.set("n", '<leader>gd', fzf.lsp_declarations, { desc = "[G]o to [D]eclarations" })
+            vim.keymap.set("n", '<leader>wd', fzf.diagnostics_workspace, { desc = "[W]orkspace [D]iagnostics" })
         end
     }
 }

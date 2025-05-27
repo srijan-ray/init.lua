@@ -30,7 +30,7 @@ return {
 			local lint = require("lint")
 			lint.linters_by_ft = {
 				java = { "checkstyle" },
-				-- python = { "ruff" },
+				python = { "mypy" },
 			}
 
 			-- To allow other plugins to add linters to require('lint').linters_by_ft,

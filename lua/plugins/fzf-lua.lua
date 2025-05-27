@@ -1,7 +1,7 @@
 return {
-  "ibhagwan/fzf-lua",
-  dependencies = { "nvim-tree/nvim-web-devicons" },
-  opts = {},
+    "ibhagwan/fzf-lua",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    opts = {},
     config = function()
         local fzf = require("fzf-lua")
         fzf.setup({
@@ -9,6 +9,11 @@ return {
             winopts = {
                 border = "rounded",
                 preview = { layout = "vertical" },
+            },
+            keymap = {
+                fzf = {
+                    ["ctrl-q"] = "select-all+accept",
+                }
             },
         })
         vim.keymap.set("n", "<leader>sf", fzf.files, { desc = "[S]earch [F]iles (fzf-lua)" })
