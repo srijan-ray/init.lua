@@ -145,13 +145,6 @@ _|"""""|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""|
 			require("trouble").setup()
 		end,
 	},
-	-- {
-	--     "j-hui/fidget.nvim",
-	--     event = "VeryLazy",
-	--     config = function()
-	--         require("fidget").setup {}
-	--     end,
-	-- },
     {
         'Bekaboo/dropbar.nvim',
         opts = {},
@@ -162,7 +155,6 @@ _|"""""|_|"""""|_|"""""|_|"""""|_|"""""|_|"""""|
             vim.keymap.set('n', '];', dropbar_api.select_next_context, { desc = 'Select next context' })
         end
     },
-	-- lazy.nvim
 	-- {
 	--     "m4xshen/hardtime.nvim",
 	--     dependencies = { "MunifTanjim/nui.nvim", "nvim-lua/plenary.nvim" },
