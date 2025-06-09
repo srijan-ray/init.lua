@@ -40,7 +40,7 @@ return {
             vim.lsp.enable('lua_ls')
 
             -- Python
-            vim.lsp.config('pyright', {
+            vim.lsp.config('basedpyright', {
                 settings = {
                     pyright = {
                         -- Using Ruff's import organizer
@@ -54,7 +54,7 @@ return {
                     },
                 },
             })
-            vim.lsp.enable('pyright')
+            vim.lsp.enable('basedpyright')
             vim.lsp.enable('ruff')
 
             -- JavaScript
