@@ -1,5 +1,21 @@
 return {
     {
+        "mason-org/mason.nvim",
+        opts = {}
+    },
+    {
+        "mason-org/mason-lspconfig.nvim",
+        opts = {
+            ensure_installed = {
+                "lua_ls",
+                "ruff",
+                "ts_ls",
+                "vue_ls",
+                "astro",
+            }
+        },
+    },
+    {
         "neovim/nvim-lspconfig",
         dependencies = {
             {
@@ -42,11 +58,8 @@ return {
             -- Python
             vim.lsp.config('basedpyright', {
                 settings = {
-                    pyright = {
-                        -- Using Ruff's import organizer
-                        disableOrganizeImports = true,
-                    },
                     basedpyright = {
+                        disableOrganizeImports = true,
                         analysis = {
                             typeCheckingMode = "basic"
                         }
@@ -90,6 +103,8 @@ return {
             vim.keymap.set("n", '<leader>gr', fzf.lsp_references, { desc = "[G]o to [R]eferences" })
             vim.keymap.set("n", '<leader>gd', fzf.lsp_declarations, { desc = "[G]o to [D]eclarations" })
             vim.keymap.set("n", '<leader>wd', fzf.diagnostics_workspace, { desc = "[W]orkspace [D]iagnostics" })
+            vim.keymap.set("n", '<leader>lse', ":lua vim.diagnostic.enable()<CR>", { desc = "Enable diagnostics" })
+            vim.keymap.set("n", '<leader>lsd', ":lua vim.diagnostic.enable(false)<CR>", { desc = "Disable diagnostics" })
         end
     }
 }
