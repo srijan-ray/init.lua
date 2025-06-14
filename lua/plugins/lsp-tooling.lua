@@ -46,6 +46,11 @@ return {
                         -- Using Ruff's import organizer
                         disableOrganizeImports = true,
                     },
+                    basedpyright = {
+                        analysis = {
+                            typeCheckingMode = "basic"
+                        }
+                    },
                     python = {
                         analysis = {
                             -- Ignore all files for analysis to exclusively use Ruff for linting
