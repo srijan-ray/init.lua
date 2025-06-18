@@ -22,6 +22,7 @@ return {
         vim.keymap.set("n", "<leader>sh", fzf.help_tags, { desc = "[S]earch [H]elp (fzf-lua)" })
         vim.keymap.set("n", "<leader>sk", fzf.keymaps, { desc = "[S]earch [K]eymaps" })
         vim.keymap.set("n", "<leader>sr", fzf.oldfiles, { desc = "[S]earch [R]ecent" })
+        vim.keymap.set("n", "<leader>ss", fzf.resume, { desc = "Resume Search" })
         vim.keymap.set("n", "<leader>/", fzf.lgrep_curbuf, { desc = "[/] Fuzzy Search current buffer" })
     end,
 }
