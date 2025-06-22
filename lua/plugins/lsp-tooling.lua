@@ -51,6 +51,7 @@ return {
                     },
                 },
             })
+            vim.lsp.set_log_level("WARN");
 
             -- Lua
             vim.lsp.enable('lua_ls')
