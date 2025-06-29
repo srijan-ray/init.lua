@@ -15,6 +15,9 @@ return {
 					modes = { "n", "i" }, -- If you are using it in insert mode
 					hybrid_modes = { "i" },
 				},
+                experimental = {
+                    check_rtp = false
+                }
 			})
 		end,
 	},
