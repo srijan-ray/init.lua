@@ -9,7 +9,7 @@ vim.opt.expandtab = true
 vim.opt.smartindent = true
 vim.opt.breakindent = true
 
-vim.opt.wrap = false
+vim.opt.wrap = true
 
 vim.opt.swapfile = false
 vim.opt.backup = false
@@ -31,3 +31,4 @@ vim.opt.colorcolumn = "80"
 vim.opt.showmode = false
 
 vim.opt.cursorline = true
+vim.opt.laststatus = 3

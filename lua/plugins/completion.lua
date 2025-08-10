@@ -131,6 +131,7 @@ return {
             { "L3MON4D3/LuaSnip" },
             { "rafamadriz/friendly-snippets" },
             { "erooke/blink-cmp-latex" },
+            { 'Kaiser-Yang/blink-cmp-avante' },
             -- { "jmbuhr/cmp-pandoc-references" },
             -- { "hrsh7th/cmp-calc" },
         },
@@ -148,7 +149,7 @@ return {
             },
 
             sources = {
-                default = { "snippets", "lsp", "path", "buffer", "latex" },
+                default = { "avante", "snippets", "lsp", "path", "buffer", "latex" },
                 providers = {
                     latex = {
                         name = "Latex",
@@ -157,6 +158,13 @@ return {
                             -- set to true to insert the latex command instead of the symbol
                             insert_command = true
                         },
+                    },
+                    avante = {
+                        module = 'blink-cmp-avante',
+                        name = 'Avante',
+                        opts = {
+                            -- options for blink-cmp-avante
+                        }
                     },
                 }
             },
