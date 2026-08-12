@@ -1,79 +1,91 @@
 return {
-	{ -- Autoformat
-		"stevearc/conform.nvim",
+    { -- Autoformat
+        "stevearc/conform.nvim",
+        event = { "BufWritePre" },
+        cmd = { "ConformInfo" },
+        opts = {
+            notify_on_error = false,
+            format_on_save = function(bufnr)
+                -- Let clangd/other LSPs own formatting for these; conform still
+                -- runs its explicit formatters below when defined.
+                local disable_filetypes = { c = true, cpp = true }
+                local lsp_format_opt
+                if disable_filetypes[vim.bo[bufnr].filetype] then
+                    lsp_format_opt = "never"
+                else
+                    lsp_format_opt = "fallback"
+                end
+                return {
+                    timeout_ms = 500,
+                    lsp_format = lsp_format_opt,
+                }
+            end,
+            formatters_by_ft = {
+                lua = { "stylua" },
+                python = { "ruff_format", "ruff_organize_imports" },
+                java = { "astyle" },
+                latex = { "latexindent" },
+                go = { "gofumpt", "goimports-reviser", "golines" },
+                markdown = { "prettierd", "prettier", stop_after_first = true },
+                rust = { "rustfmt" },
+                c = { "clang-format" },
+                cpp = { "clang-format" },
+                sh = { "shfmt" },
+                -- Web: use whichever formatter is available first
+                javascript = { "prettierd", "prettier", stop_after_first = true },
+                javascriptreact = { "prettierd", "prettier", stop_after_first = true },
+                typescript = { "prettierd", "prettier", stop_after_first = true },
+                typescriptreact = { "prettierd", "prettier", stop_after_first = true },
+                vue = { "prettierd", "prettier", stop_after_first = true },
+                astro = { "prettierd", "prettier", stop_after_first = true },
+                css = { "prettierd", "prettier", stop_after_first = true },
+                scss = { "prettierd", "prettier", stop_after_first = true },
+                html = { "prettierd", "prettier", stop_after_first = true },
+                json = { "prettierd", "prettier", stop_after_first = true },
+                jsonc = { "prettierd", "prettier", stop_after_first = true },
+                yaml = { "prettierd", "prettier", stop_after_first = true },
+            },
+        },
+    },
+    { -- Linting
+        "mfussenegger/nvim-lint",
+        event = { "BufReadPre", "BufNewFile" },
+        config = function()
+            local lint = require("lint")
+            -- Python linting is handled by the ruff LSP; Rust/C/C++/Go/TS by
+            -- their language servers. These cover the gaps.
+            lint.linters_by_ft = {
+                java = { "checkstyle" },
+            }
 
-		opts = {
-			notify_on_error = false,
-			format_on_save = function(bufnr)
-				local disable_filetypes = { c = true, cpp = true }
-				return {
-					timeout_ms = 500,
-					lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
-				}
-			end,
-			formatters_by_ft = {
-				lua = { "stylua" },
-				python = { "black" },
-				java = { "astyle" },
-				latex = { "latexindent" },
-				go = { "gofumpt", "goimports-reviser", "golines" },
-				markdown = { "cbfmt" },
-				javascript = { { "biome", "prettierd", "prettier" } },
-				c = { "clang-format" },
-			},
-		},
-	},
-	{ -- Linting
-		"mfussenegger/nvim-lint",
-		event = { "BufReadPre", "BufNewFile" },
-		config = function()
-			local lint = require("lint")
-			lint.linters_by_ft = {
-				java = { "checkstyle" },
-				python = { "mypy" },
-			}
-
-			-- To allow other plugins to add linters to require('lint').linters_by_ft,
-			-- instead set linters_by_ft like this:
-			-- lint.linters_by_ft = lint.linters_by_ft or {}
-			-- lint.linters_by_ft['markdown'] = { 'markdownlint' }
-			--
-			-- However, note that this will enable a set of default linters,
-			-- which will cause errors unless these tools are available:
-			-- {
-			--   clojure = { "clj-kondo" },
-			--   dockerfile = { "hadolint" },
-			--   inko = { "inko" },
-			--   janet = { "janet" },
-			--   json = { "jsonlint" },
-			--   markdown = { "vale" },
-			--   rst = { "vale" },
-			--   ruby = { "ruby" },
-			--   terraform = { "tflint" },
-			--   text = { "vale" }
-			-- }
-			--
-			-- You can disable the default linters by setting their filetypes to nil:
-			-- lint.linters_by_ft['clojure'] = nil
-			-- lint.linters_by_ft['dockerfile'] = nil
-			-- lint.linters_by_ft['inko'] = nil
-			-- lint.linters_by_ft['janet'] = nil
-			-- lint.linters_by_ft['json'] = nil
-			-- lint.linters_by_ft['markdown'] = nil
-			-- lint.linters_by_ft['rst'] = nil
-			-- lint.linters_by_ft['ruby'] = nil
-			-- lint.linters_by_ft['terraform'] = nil
-			-- lint.linters_by_ft['text'] = nil
-
-			-- Create autocommand which carries out the actual linting
-			-- on the specified events.
-			local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
-			vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
-				group = lint_augroup,
-				callback = function()
-					require("lint").try_lint()
-				end,
-			})
-		end,
-	},
+            -- Run the configured linters on the given events.
+            local lint_augroup = vim.api.nvim_create_augroup("srijan_lint", { clear = true })
+            vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
+                group = lint_augroup,
+                callback = function()
+                    -- Only run on real, modifiable file buffers.
+                    if not (vim.bo.modifiable and vim.bo.buftype == "") then
+                        return
+                    end
+                    -- Only run linters whose executable is actually installed, so a
+                    -- missing tool (e.g. checkstyle) doesn't spam ENOENT errors.
+                    local names = lint.linters_by_ft[vim.bo.filetype] or {}
+                    local runnable = {}
+                    for _, name in ipairs(names) do
+                        local linter = lint.linters[name]
+                        local cmd = type(linter) == "table" and linter.cmd or nil
+                        if type(cmd) == "function" then
+                            cmd = cmd()
+                        end
+                        if cmd and vim.fn.executable(cmd) == 1 then
+                            table.insert(runnable, name)
+                        end
+                    end
+                    if #runnable > 0 then
+                        lint.try_lint(runnable)
+                    end
+                end,
+            })
+        end,
+    },
 }

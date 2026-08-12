@@ -94,21 +94,14 @@ return {
             require("alpha").setup(dashboard.opts)
 
             vim.api.nvim_create_autocmd("User", {
-                pattern = "LazyVimStarted",
+                pattern = "VeryLazy",
+                once = true,
                 callback = function()
                     local stats = require("lazy").stats()
                     local ms = (math.floor(stats.startuptime * 100 + 0.5) / 100)
                     dashboard.section.footer.val = "⚡ Neovim loaded " .. stats.count .. " plugins in " .. ms .. "ms"
                     pcall(vim.cmd.AlphaRedraw)
                 end,
-            })
-        end,
-    },
-    {
-        "roobert/tailwindcss-colorizer-cmp.nvim",
-        config = function()
-            require("tailwindcss-colorizer-cmp").setup({
-                color_square_width = 2,
             })
         end,
     },
@@ -154,8 +147,10 @@ return {
     },
     {
         'Bekaboo/dropbar.nvim',
+        event = { "BufReadPost", "BufNewFile" },
         opts = {},
         config = function()
+            require("dropbar").setup()
             local dropbar_api = require('dropbar.api')
             vim.keymap.set('n', '<Leader>;', dropbar_api.pick, { desc = 'Pick symbols in winbar' })
             vim.keymap.set('n', '[;', dropbar_api.goto_context_start, { desc = 'Go to start of current context' })
@@ -175,20 +170,27 @@ return {
     -- },
     {
         "j-hui/fidget.nvim",
-        opts = {
-            -- options
-        },
-        config = function()
-            require("fidget").setup({})
-        end,
+        -- LSP progress spinner — only needed once a language server attaches.
+        event = "LspAttach",
+        opts = {},
     },
     {
         "HiPhish/rainbow-delimiters.nvim",
+        event = { "BufReadPost", "BufNewFile" },
     },
     {
         "rcarriga/nvim-notify",
+        -- Pure dependency of noice (which is VeryLazy); no need to load at startup.
+        lazy = true,
         opts = {
-            timeout = 100,
+            -- Floating notification cards: mantle body with a rounded, severity-
+            -- coloured border (via catppuccin Notify*Border + on_open below).
+            render = "wrapped-compact",
+            stages = "fade",
+            timeout = 3000,
+            fps = 60,
+            -- Blend colour for the fade animation; matches the float bg (mantle).
+            background_colour = "#1e2030",
             max_height = function()
                 return math.floor(vim.o.lines * 0.75)
             end,
@@ -196,7 +198,9 @@ return {
                 return math.floor(vim.o.columns * 0.75)
             end,
             on_open = function(win)
-                vim.api.nvim_win_set_config(win, { zindex = 100 })
+                -- Rounded, severity-coloured border (see catppuccin Notify*Border)
+                -- so each notification reads as a distinct floating card.
+                vim.api.nvim_win_set_config(win, { zindex = 100, border = "rounded" })
             end,
         },
     },
@@ -206,9 +210,43 @@ return {
         dependencies = {
             "MunifTanjim/nui.nvim",
         },
+        -- Scroll the LSP hover / signature popup (rendered by noice) without
+        -- leaving your current window. Falls back to normal <C-f>/<C-b> when no
+        -- popup is open.
+        keys = {
+            {
+                "<C-f>",
+                function()
+                    if not require("noice.lsp").scroll(4) then
+                        return "<C-f>"
+                    end
+                end,
+                silent = true,
+                expr = true,
+                desc = "Scroll hover/docs down",
+            },
+            {
+                "<C-b>",
+                function()
+                    if not require("noice.lsp").scroll(-4) then
+                        return "<C-b>"
+                    end
+                end,
+                silent = true,
+                expr = true,
+                desc = "Scroll hover/docs up",
+            },
+        },
         config = function()
             vim.notify = require("notify")
             require("noice").setup({
+                -- Thicker (bold) borders on the command-line popup and its
+                -- completion/selection popupmenu; the LSP hover popup is borderless.
+                views = {
+                    cmdline_popup = { border = { style = "bold" } },
+                    popupmenu = { border = { style = "bold" } },
+                    hover = { border = { style = "none" } },
+                },
                 lsp = {
                     -- override markdown rendering so that **cmp** and other plugins use **Treesitter**
                     override = {
@@ -230,25 +268,40 @@ return {
         "kawre/leetcode.nvim",
         build = ":TSUpdate html",
         dependencies = {
-            "nvim-telescope/telescope.nvim",
-            "nvim-lua/plenary.nvim", -- required by telescope
+            "nvim-lua/plenary.nvim",
             "MunifTanjim/nui.nvim",
-
-            -- optional
+            "ibhagwan/fzf-lua", -- picker (replaces telescope)
             "nvim-treesitter/nvim-treesitter",
-            "rcarriga/nvim-notify",
             "nvim-tree/nvim-web-devicons",
         },
         cmd = "Leet",
         opts = {
-            -- configuration goes here
+            -- Use fzf-lua for problem/list pickers instead of telescope
+            picker = { provider = "fzf-lua" },
         },
     },
     {
         "folke/todo-comments.nvim",
-        event = "VimEnter",
+        event = { "BufReadPost", "BufNewFile" },
         dependencies = { "nvim-lua/plenary.nvim" },
         opts = { signs = false },
+        keys = {
+            {
+                "]t",
+                function()
+                    require("todo-comments").jump_next()
+                end,
+                desc = "Next todo comment",
+            },
+            {
+                "[t",
+                function()
+                    require("todo-comments").jump_prev()
+                end,
+                desc = "Previous todo comment",
+            },
+            { "<leader>st", "<cmd>TodoFzfLua<cr>", desc = "[S]earch [T]odos" },
+        },
     },
     {
         'stevearc/oil.nvim',
@@ -266,6 +319,28 @@ return {
         "folke/which-key.nvim",
         event = "VeryLazy",
         opts = {
+            preset = "helix",
+            -- Slightly thicker (bold) border, coloured via the WhichKeyBorder highlight.
+            win = { border = "bold" },
+            spec = {
+                { "<leader>a", group = "AI / Claude" },
+                { "<leader>c", group = "Code" },
+                { "<leader>d", group = "Debug" },
+                { "<leader>g", group = "Git / Goto" },
+                { "<leader>gh", group = "Git Hunks" },
+                { "<leader>gv", group = "Diffview" },
+                { "<leader>i", group = "Iron REPL" },
+                { "<leader>l", group = "LSP" },
+                { "<leader>ls", group = "Diagnostics toggle" },
+                { "<leader>p", group = "Paste / Preview" },
+                { "<leader>q", group = "Quickfix" },
+                { "<leader>r", group = "Rename / REPL" },
+                { "<leader>s", group = "Search" },
+                { "<leader>t", group = "Toggle" },
+                { "<leader>v", group = "View / Preview" },
+                { "<leader>w", group = "Workspace" },
+                { "<leader>x", group = "Trouble / Diagnostics" },
+            },
         },
         keys = {
             {
@@ -279,13 +354,12 @@ return {
     },
     {
         "folke/snacks.nvim",
+        -- Only image previews are used here (plus it's a claudecode dependency),
+        -- so defer it until after startup rather than loading on the dashboard.
+        event = "VeryLazy",
         ---@type snacks.Config
         opts = {
-            image = {
-                -- your image configuration comes here
-                -- or leave it empty to use the default settings
-                -- refer to the configuration section below
-            },
+            image = {},
         },
     },
 }

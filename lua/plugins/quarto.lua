@@ -1,9 +1,10 @@
 return {
 	{
 		"goerz/jupytext.nvim",
+		ft = { "python", "markdown", "quarto" },
 		opts = {
 			format = "py:hydrogen",
-		}, -- see Options
+		},
 	},
 	{
 		"echasnovski/mini.hipatterns",
@@ -11,9 +12,7 @@ return {
 		dependencies = { "GCBallesteros/NotebookNavigator.nvim" },
 		opts = function()
 			local nn = require("notebook-navigator")
-
-			local opts = { highlighters = { cells = nn.minihipatterns_spec } }
-			return opts
+			return { highlighters = { cells = nn.minihipatterns_spec } }
 		end,
 	},
 	{
@@ -22,13 +21,12 @@ return {
 		dependencies = { "GCBallesteros/NotebookNavigator.nvim" },
 		opts = function()
 			local nn = require("notebook-navigator")
-
-			local opts = { custom_textobjects = { h = nn.miniai_spec } }
-			return opts
+			return { custom_textobjects = { h = nn.miniai_spec } }
 		end,
 	},
 	{
 		"Vigemus/iron.nvim",
+		ft = { "python", "quarto", "markdown", "sh" },
 		config = function()
 			local iron = require("iron.core")
 
@@ -53,7 +51,6 @@ return {
 					repl_open_cmd = require("iron.view").right(50),
 				},
 				-- Iron doesn't set keymaps by default anymore.
-				-- You can set them here or manually add keymaps to the functions in iron.core
 				keymaps = {
 					send_motion = "<space>isc",
 					visual_send = "<space>isc",
@@ -71,7 +68,6 @@ return {
 					clear = "<space>icl",
 				},
 				-- If the highlight is on, you can change how it looks
-				-- For the available options, check nvim_set_hl
 				highlight = {
 					italic = true,
 				},
@@ -79,10 +75,10 @@ return {
 			})
 
 			-- iron also has a list of commands, see :h iron-commands for all available commands
-			vim.keymap.set("n", "<space>rs", "<cmd>IronRepl<cr>")
-			vim.keymap.set("n", "<space>rr", "<cmd>IronRestart<cr>")
-			vim.keymap.set("n", "<space>rf", "<cmd>IronFocus<cr>")
-			vim.keymap.set("n", "<space>rh", "<cmd>IronHide<cr>")
+			vim.keymap.set("n", "<space>rs", "<cmd>IronRepl<cr>", { desc = "Iron: open REPL" })
+			vim.keymap.set("n", "<space>rr", "<cmd>IronRestart<cr>", { desc = "Iron: restart REPL" })
+			vim.keymap.set("n", "<space>rf", "<cmd>IronFocus<cr>", { desc = "Iron: focus REPL" })
+			vim.keymap.set("n", "<space>rh", "<cmd>IronHide<cr>", { desc = "Iron: hide REPL" })
 		end,
 	},
 }

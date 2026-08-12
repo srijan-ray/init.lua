@@ -127,6 +127,9 @@ return {
     },
     {
         "saghen/blink.cmp",
+        -- Load on first insert (and pulled in earlier by nvim-lspconfig for its
+        -- capabilities when a file opens). Keeps it off the dashboard startup.
+        event = "InsertEnter",
         dependencies = {
             { "L3MON4D3/LuaSnip" },
             { "rafamadriz/friendly-snippets" },
@@ -143,6 +146,21 @@ return {
             appearance = {
                 use_nvim_cmp_as_default = true,
                 nerd_font_variant = "mono",
+            },
+
+            -- Borderless completion menu / docs / signature (bg via catppuccin
+            -- BlinkCmp* highlights). No borders here per preference.
+            completion = {
+                menu = { border = "none", draw = { treesitter = { "lsp" } } },
+                documentation = {
+                    auto_show = true,
+                    auto_show_delay_ms = 200,
+                    window = { border = "none" },
+                },
+            },
+            signature = {
+                enabled = true,
+                window = { border = "none" },
             },
 
             sources = {

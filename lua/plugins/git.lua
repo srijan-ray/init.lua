@@ -1,21 +1,4 @@
 return {
-    -- {
-    --     'SuperBo/fugit2.nvim',
-    --     opts = {},
-    --     dependencies = {
-    --         'MunifTanjim/nui.nvim',
-    --         'nvim-tree/nvim-web-devicons',
-    --         'nvim-lua/plenary.nvim',
-    --         {
-    --             'chrisgrieser/nvim-tinygit', -- optional: for Github PR view
-    --             dependencies = { 'stevearc/dressing.nvim' }
-    --         },
-    --     },
-    --     cmd = { 'Fugit2', 'Fugit2Graph' },
-    --     keys = {
-    --         { '<leader>gs', mode = 'n', '<cmd>Fugit2<cr>' }
-    --     }
-    -- },
     {
         "kdheepak/lazygit.nvim",
         lazy = true,
@@ -37,13 +20,23 @@ return {
         }
     },
     {
-        -- optional: for diffview.nvim integration
+        -- Multi-file diff / review cockpit — great for reviewing a whole changeset
+        -- (e.g. after a big AI-assisted, many-file edit) rather than one diff at a time.
         'sindrets/diffview.nvim',
         dependencies = { 'nvim-tree/nvim-web-devicons' },
         -- lazy, only load diffview by these commands
         cmd = {
-            'DiffviewFileHistory', 'DiffviewOpen', 'DiffviewToggleFiles', 'DiffviewFocusFiles', 'DiffviewRefresh'
-        }
+            'DiffviewOpen', 'DiffviewClose', 'DiffviewFileHistory',
+            'DiffviewToggleFiles', 'DiffviewFocusFiles', 'DiffviewRefresh'
+        },
+        -- stylua: ignore
+        keys = {
+            { "<leader>gvo", "<cmd>DiffviewOpen<cr>",           desc = "Diffview: open (review pending changes)" },
+            { "<leader>gvc", "<cmd>DiffviewClose<cr>",          desc = "Diffview: close" },
+            { "<leader>gvf", "<cmd>DiffviewToggleFiles<cr>",    desc = "Diffview: toggle file panel" },
+            { "<leader>gvh", "<cmd>DiffviewFileHistory %<cr>",  desc = "Diffview: file history (current file)" },
+            { "<leader>gvH", "<cmd>DiffviewFileHistory<cr>",    desc = "Diffview: file history (whole repo)" },
+        },
     },
     {
         "lewis6991/gitsigns.nvim",
@@ -79,8 +72,5 @@ return {
                 map({ "o", "x" }, "ih", ":<C-U>Gitsigns select_hunk<CR>", "GitSigns Select Hunk")
             end,
         },
-        config = function()
-            require('gitsigns').setup()
-        end
     }
 }

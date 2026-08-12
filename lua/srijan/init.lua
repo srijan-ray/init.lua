@@ -1,3 +1,3 @@
 require("srijan.remap")
-require("srijan.lazy")
 require("srijan.set")
+require("srijan.autocmds")

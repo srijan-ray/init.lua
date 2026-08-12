@@ -1,130 +1,136 @@
+-- nvim-treesitter on the `main` branch (the rewrite). This is the right fit for
+-- Neovim 0.11+/0.12 and natively avoids the master-branch injection/directive
+-- incompatibilities. It requires the external `tree-sitter` CLI to build parsers
+-- (installed via `brew install tree-sitter`).
 return {
-    "nvim-treesitter/nvim-treesitter",
-    lazy = false,
-    build = ":TSUpdate",
-    dependencies = {
-        {
-            -- "nvim-treesitter/nvim-treesitter-textobjects",
+    {
+        "nvim-treesitter/nvim-treesitter",
+        branch = "main",
+        build = ":TSUpdate",
+        -- Load just before the first file's FileType fires so an empty-dashboard
+        -- start stays fast, while highlighting still attaches to the first buffer.
+        event = { "BufReadPre", "BufNewFile" },
+        init = function()
+            -- Insurance shim for Neovim 0.11+/0.12: some third-party query directive
+            -- handlers pass `match[id]` (now a LIST of nodes) straight to
+            -- get_node_text(), which then calls node:range() on a table and errors.
+            -- Normalise a stray node-list back to a single node. Harmless otherwise.
+            local get_node_text = vim.treesitter.get_node_text
+            vim.treesitter.get_node_text = function(node, source, opts)
+                if type(node) == "table" then
+                    node = node[#node]
+                end
+                return get_node_text(node, source, opts)
+            end
+        end,
+        config = function()
+            require("nvim-treesitter").setup()
+
+            local ensure_installed = {
+                "bash",
+                "c",
+                "cpp",
+                "css",
+                "diff",
+                "dockerfile",
+                "gitcommit",
+                "gitignore",
+                "go",
+                "gomod",
+                "html",
+                "java",
+                "javascript",
+                "jsdoc",
+                "json",
+                "latex",
+                "lua",
+                "luadoc",
+                "markdown",
+                "markdown_inline",
+                "python",
+                "query",
+                "regex",
+                "rust",
+                "toml",
+                "tsx",
+                "typescript",
+                "vim",
+                "vimdoc",
+                "vue",
+                "yaml",
+            }
+
+            -- Install any parsers we don't already have (async, non-blocking).
+            local installed = require("nvim-treesitter.config").get_installed("parsers")
+            local to_install = vim.tbl_filter(function(lang)
+                return not vim.tbl_contains(installed, lang)
+            end, ensure_installed)
+            if #to_install > 0 then
+                require("nvim-treesitter").install(to_install)
+            end
+
+            -- Enable highlighting + treesitter-based indentation for any buffer
+            -- whose language has a parser available.
+            vim.api.nvim_create_autocmd("FileType", {
+                group = vim.api.nvim_create_augroup("srijan_treesitter", { clear = true }),
+                callback = function(event)
+                    -- start() errors if no parser is available, so guard it.
+                    if not pcall(vim.treesitter.start, event.buf) then
+                        return
+                    end
+                    local lang = vim.treesitter.language.get_lang(vim.bo[event.buf].filetype)
+                    if lang and vim.treesitter.query.get(lang, "indents") then
+                        vim.bo[event.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+                    end
+                end,
+            })
+        end,
+    },
+    {
+        "nvim-treesitter/nvim-treesitter-textobjects",
+        branch = "main",
+        event = { "BufReadPre", "BufNewFile" },
+        config = function()
+            require("nvim-treesitter-textobjects").setup({
+                select = { lookahead = true },
+                move = { set_jumps = true },
+            })
+
+            local move = require("nvim-treesitter-textobjects.move")
+            local map = vim.keymap.set
+            -- Jump between functions / classes (select textobjects like af/if are
+            -- left to mini.ai to avoid clashes).
+            map({ "n", "x", "o" }, "]f", function()
+                move.goto_next_start("@function.outer", "textobjects")
+            end, { desc = "Next function start" })
+            map({ "n", "x", "o" }, "]c", function()
+                move.goto_next_start("@class.outer", "textobjects")
+            end, { desc = "Next class start" })
+            map({ "n", "x", "o" }, "[f", function()
+                move.goto_previous_start("@function.outer", "textobjects")
+            end, { desc = "Prev function start" })
+            map({ "n", "x", "o" }, "[c", function()
+                move.goto_previous_start("@class.outer", "textobjects")
+            end, { desc = "Prev class start" })
+        end,
+    },
+    {
+        "nvim-treesitter/nvim-treesitter-context",
+        event = { "BufReadPre", "BufNewFile" },
+        opts = {
+            max_lines = 3,
+            multiline_threshold = 1,
+            trim_scope = "outer",
+            mode = "cursor",
         },
-        {
-            "nvim-treesitter/nvim-treesitter-context",
+        keys = {
+            {
+                "[C",
+                function()
+                    require("treesitter-context").go_to_context(vim.v.count1)
+                end,
+                desc = "Jump to context (upwards)",
+            },
         },
     },
 }
--- return {
---     {
---         -- Highlight, edit, and navigate code
---         "nvim-treesitter/nvim-treesitter",
---         event = "BufReadPre",
---         dependencies = {
---             {
---                 -- "nvim-treesitter/nvim-treesitter-textobjects",
---             },
---             {
---                 "nvim-treesitter/nvim-treesitter-context",
---             }
---         },
---         build = ":TSUpdate",
---         config = function()
---             require("nvim-treesitter.configs").setup({
---                 -- Add languages to be installed here that you want installed for treesitter
---                 ensure_installed = {
---                     "c",
---                     "cpp",
---                     "go",
---                     "lua",
---                     "python",
---                     "rust",
---                     "tsx",
---                     "typescript",
---                     "vimdoc",
---                     "vim",
---                     "java",
---                     "javascript",
---                     "astro",
---                 },
---
---                 -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
---                 auto_install = true,
---                 highlight = { enable = true },
---                 indent = { enable = true },
---                 incremental_selection = {
---                     enable = true,
---                     keymaps = {
---                         -- init_selection = '<c-space>',
---                         -- node_incremental = '<c-space>',
---                         -- scope_incremental = '<c-s>',
---                         -- node_decremental = '<M-space>',
---                     },
---                 },
---                 textobjects = {
---                     select = {
---                         enable = true,
---                         lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
---                         keymaps = {
---                             -- You can use the capture groups defined in textobjects.scm
---                             --['aa'] = '@parameter.outer',
---                             -- ['ia'] = '@parameter.inner',
---                             -- ['af'] = '@function.outer',
---                             -- ['if'] = '@function.inner',
---                             -- ['ac'] = '@class.outer',
---                             -- ['ic'] = '@class.inner',
---                         },
---                     },
---                     move = {
---                         enable = true,
---                         set_jumps = true, -- whether to set jumps in the jumplist
---                         goto_next_start = {
---                             -- [']m'] = '@function.outer',
---                             -- [']]'] = '@class.outer',
---                         },
---                         goto_next_end = {
---                             -- [']M'] = '@function.outer',
---                             -- [']['] = '@class.outer',
---                         },
---                         goto_previous_start = {
---                             -- ['[m'] = '@function.outer',
---                             -- ['[['] = '@class.outer',
---                         },
---                         goto_previous_end = {
---                             -- ['[M'] = '@function.outer',
---                             -- ['[]'] = '@class.outer',
---                         },
---                     },
---                     swap = {
---                         enable = true,
---                         swap_next = {
---                             -- ['<leader>a'] = '@parameter.inner',
---                         },
---                         swap_previous = {
---                             -- ['<leader>A'] = '@parameter.inner',
---                         },
---                     },
---                 },
---             })
---             require("treesitter-context").setup({
---                 enable = true,            -- Enable this plugin (Can be enabled/disabled later via commands)
---                 max_lines = 0,            -- How many lines the window should span. Values <= 0 mean no limit.
---                 min_window_height = 0,    -- Minimum editor window height to enable context. Values <= 0 mean no limit.
---                 line_numbers = true,
---                 multiline_threshold = 20, -- Maximum number of lines to collapse for a single context line
---                 trim_scope = "outer",     -- Which context lines to discard if `max_lines` is exceeded. Choices: 'inner', 'outer'
---                 mode = "cursor",          -- Line used to calculate context. Choices: 'cursor', 'topline'
---                 -- Separator between context and content. Should be a single character string, like '-'.
---                 -- When separator is set, the context will only show up when there are at least 2 lines above cursorline.
---                 separator = nil,
---                 zindex = 20,     -- The Z-index of the context window
---                 on_attach = nil, -- (fun(buf: integer): boolean) return false to disable attaching
---             })
---
---             vim.keymap.set("n", "[c", function()
---                 require("treesitter-context").go_to_context()
---             end, { silent = true })
---         end,
---     },
---     {
---         "nvim-treesitter/nvim-treesitter-context",
---         config = function()
---         end,
---     },
--- }

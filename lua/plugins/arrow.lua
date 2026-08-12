@@ -2,9 +2,9 @@ return {
 	"otavioschwanck/arrow.nvim",
 	dependencies = {
 		{ "nvim-tree/nvim-web-devicons" },
-		-- or if using `mini.icons`
-		-- { "echasnovski/mini.icons" },
 	},
+	-- Load when either leader key is first pressed
+	keys = { "'", "m" },
 	opts = {
 		show_icons = true,
 		leader_key = "'", -- Recommended to be a single key

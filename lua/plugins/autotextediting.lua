@@ -29,13 +29,14 @@ return {
 	},
 	{
 		"lukas-reineke/indent-blankline.nvim",
-		config = function()
-			require("ibl").setup()
-		end,
+		main = "ibl",
+		event = { "BufReadPost", "BufNewFile" },
+		opts = {},
 	},
 	{
 		"echasnovski/mini.bracketed",
 		version = false,
+		event = { "BufReadPost", "BufNewFile" },
 		config = function()
 			require("mini.bracketed").setup()
 		end,

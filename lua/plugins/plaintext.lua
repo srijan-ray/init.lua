@@ -1,25 +1,20 @@
 return {
 	{
 		"OXY2DEV/markview.nvim",
-		lazy = false,
+		ft = { "markdown", "quarto", "rmd", "codecompanion" },
 		dependencies = {
-			-- You may not need this if you don't lazy load
-			-- Or if the parsers are in your $RUNTIMEPATH
 			"nvim-treesitter/nvim-treesitter",
-
 			"nvim-tree/nvim-web-devicons",
 		},
-		config = function()
-			require("markview").setup({
-				preview = {
-					modes = { "n", "i" }, -- If you are using it in insert mode
-					hybrid_modes = { "i" },
-				},
-                experimental = {
-                    check_rtp = false
-                }
-			})
-		end,
+		opts = {
+			preview = {
+				modes = { "n", "i" }, -- If you are using it in insert mode
+				hybrid_modes = { "i" },
+			},
+			experimental = {
+				check_rtp = false,
+			},
+		},
 	},
 	{
 		"iamcco/markdown-preview.nvim",
@@ -32,14 +27,24 @@ return {
 	},
 	{
 		"lervag/vimtex",
+		-- vimtex owns tex filetype detection & compilation, so load it lazily on
+		-- the relevant filetypes rather than at startup.
+		ft = { "tex", "plaintex", "bib" },
 	},
-	{ "echasnovski/mini.align", version = false, opts = {} },
+	{
+		"echasnovski/mini.align",
+		version = false,
+		keys = {
+			{ "ga", mode = { "n", "v" }, desc = "Align" },
+			{ "gA", mode = { "n", "v" }, desc = "Align with preview" },
+		},
+		opts = {},
+	},
 	{
 		"HakonHarnes/img-clip.nvim",
 		event = "VeryLazy",
 		opts = {},
 		keys = {
-			-- suggested keymap
 			{ "<leader>pi", "<cmd>PasteImage<cr>", desc = "Paste image from system clipboard" },
 		},
 	},
