@@ -6,6 +6,87 @@ return {
 			format = "py:hydrogen",
 		},
 	},
+	-- Molten: execute code through real Jupyter kernels and show output (text AND
+	-- plots) inline under the cell — the piece that replaces VSCode notebooks.
+	-- Requires the Neovim python provider (`pynvim`) + `jupyter_client` + a kernel
+	-- (`ipykernel`); run `:UpdateRemotePlugins` after install. See README prereqs.
+	{
+		"benlubas/molten-nvim",
+		ft = { "python", "quarto", "markdown" },
+		build = ":UpdateRemotePlugins",
+		dependencies = { "3rd/image.nvim" },
+		init = function()
+			vim.g.molten_image_provider = "image.nvim"
+			vim.g.molten_output_win_max_height = 20
+			vim.g.molten_auto_open_output = false
+			vim.g.molten_wrap_output = true
+			vim.g.molten_virt_text_output = true
+			vim.g.molten_virt_lines_off_by_1 = true
+		end,
+		-- stylua: ignore
+		keys = {
+			{ "<leader>mi", "<cmd>MoltenInit<cr>",              desc = "Molten: init kernel" },
+			{ "<leader>me", "<cmd>MoltenEvaluateOperator<cr>",  desc = "Molten: evaluate operator" },
+			{ "<leader>ml", "<cmd>MoltenEvaluateLine<cr>",      desc = "Molten: evaluate line" },
+			{ "<leader>mc", "<cmd>MoltenReevaluateCell<cr>",    desc = "Molten: re-evaluate cell" },
+			{ "<leader>mv", ":<C-u>MoltenEvaluateVisual<cr>gv", mode = "v", desc = "Molten: evaluate selection" },
+			{ "<leader>mo", "<cmd>MoltenShowOutput<cr>",        desc = "Molten: show output" },
+			{ "<leader>mh", "<cmd>MoltenHideOutput<cr>",        desc = "Molten: hide output" },
+			{ "<leader>md", "<cmd>MoltenDelete<cr>",            desc = "Molten: delete cell" },
+			{ "<leader>mx", "<cmd>MoltenInterrupt<cr>",         desc = "Molten: interrupt kernel" },
+			{ "<leader>mb", "<cmd>MoltenOpenInBrowser<cr>",     desc = "Molten: open output in browser" },
+		},
+	},
+	-- Inline images (plots) for molten and markdown. Needs an image-capable
+	-- terminal (kitty / wezterm / ghostty) + ImageMagick — see README prereqs.
+	{
+		"3rd/image.nvim",
+		ft = { "markdown", "quarto", "python" },
+		opts = {
+			backend = "kitty",
+			processor = "magick_cli", -- uses the ImageMagick CLI (no luarock needed)
+			integrations = {
+				markdown = {
+					enabled = true,
+					only_render_image_at_cursor = true,
+				},
+			},
+			max_width_window_percentage = 40,
+		},
+	},
+	-- Quarto + otter: LSP, completion, and diagnostics INSIDE code cells, plus
+	-- running cells through molten. Works for .qmd and fenced code in markdown.
+	{
+		"quarto-dev/quarto-nvim",
+		ft = { "quarto", "markdown" },
+		dependencies = {
+			{ "jmbuhr/otter.nvim", opts = {} },
+			"nvim-treesitter/nvim-treesitter",
+		},
+		opts = {
+			lspFeatures = {
+				enabled = true,
+				languages = { "python", "bash", "lua", "html" },
+			},
+			codeRunner = {
+				enabled = true,
+				default_method = "molten",
+			},
+		},
+	},
+	-- Notebook cell navigation + running, wired to use molten as the runner.
+	{
+		"GCBallesteros/NotebookNavigator.nvim",
+		opts = { repl_provider = "molten" },
+		-- stylua: ignore
+		keys = {
+			-- Cell nav on ]/[ + n (gitsigns owns ]h/[h, so we avoid those)
+			{ "]n", function() require("notebook-navigator").move_cell("d") end, desc = "Next notebook cell" },
+			{ "[n", function() require("notebook-navigator").move_cell("u") end, desc = "Prev notebook cell" },
+			{ "<leader>mj", function() require("notebook-navigator").run_and_move() end, desc = "Run cell & move" },
+			{ "<leader>mJ", function() require("notebook-navigator").run_cell() end, desc = "Run cell" },
+		},
+	},
 	{
 		"echasnovski/mini.hipatterns",
 		event = "VeryLazy",

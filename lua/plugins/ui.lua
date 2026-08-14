@@ -324,7 +324,9 @@ return {
             win = { border = "bold" },
             spec = {
                 { "<leader>a", group = "AI / Claude" },
+                { "<leader>b", group = "Backend (DB / HTTP)" },
                 { "<leader>c", group = "Code" },
+                { "<leader>m", group = "Molten / Notebook" },
                 { "<leader>d", group = "Debug" },
                 { "<leader>g", group = "Git / Goto" },
                 { "<leader>gh", group = "Git Hunks" },

@@ -2,31 +2,82 @@
 
 My personal Neovim configuration — a lazy.nvim setup modelled loosely on LazyVim
 (borrowing its optimizations and plugin choices) but hand-rolled, for Python,
-Java, Rust, C/C++, Go, and web (JS/TS/Vue/Astro) development, plus Markdown,
-LaTeX, and notebook/data-science work.
+Java, Rust, C/C++, Go, and web (JS/TS/Vue/Astro) development. Also set up for
+backend work (SQL via dadbod, HTTP/REST via kulala), AWS/IaC (CloudFormation &
+SAM schemas via yamlls + SchemaStore, Terraform), and a full Jupyter notebook
+experience (molten + jupytext + quarto/otter) — plus Markdown and LaTeX.
 
 > **Leader key:** `<Space>` (local leader is also `<Space>`)
 
 ---
 
-## Requirements
+## Prerequisites (setting up on a new machine)
 
-- **Neovim 0.11+** (built/tested on 0.12).
-- **`tree-sitter` CLI** — `brew install tree-sitter` (needed to build parsers; nvim-treesitter is on the `main` branch).
-- **A C compiler** (`cc`/clang) — comes with the Xcode command-line tools.
-- **ripgrep** (`rg`) and **fd** — for fzf-lua grep/file search.
-- **Node.js** — for some LSPs/formatters (prettier, vtsls, etc.).
-- **lazygit** — for the git UI (`<leader>gs`).
-- LSP servers, formatters, linters, and debug adapters are installed
-  automatically by **Mason** / **mason-lspconfig** / **mason-nvim-dap** on first use.
+**Neovim 0.11+** is required (built/tested on 0.12). LSP servers, formatters,
+linters, and debug adapters install themselves via **Mason** on first use, so the
+lists below are just the system-level tools those depend on.
+
+### 1. System packages
+
+**macOS (Homebrew)**
+```bash
+brew install neovim git ripgrep fd node lazygit tree-sitter imagemagick fzf
+brew install --cask font-jetbrains-mono-nerd-font   # any Nerd Font
+```
+
+**Fedora / RHEL / Amazon Linux (dnf)**
+```bash
+sudo dnf install -y neovim git ripgrep fd-find nodejs npm ImageMagick \
+  gcc gcc-c++ make unzip xclip
+# tree-sitter CLI + lazygit aren't always packaged — easiest via:
+npm install -g tree-sitter-cli        # or: cargo install tree-sitter-cli
+# lazygit: sudo dnf copr enable atim/lazygit -y && sudo dnf install lazygit
+```
+
+**Debian / Ubuntu (apt)**
+```bash
+sudo apt update && sudo apt install -y git ripgrep fd-find nodejs npm \
+  imagemagick build-essential unzip xclip wl-clipboard curl
+# Neovim: use the unstable PPA or the AppImage — distro nvim is usually too old:
+#   sudo add-apt-repository ppa:neovim-ppa/unstable && sudo apt install neovim
+npm install -g tree-sitter-cli        # tree-sitter CLI
+# lazygit + a Nerd Font: install from their GitHub releases
+```
+
+> Notes: on apt, `fd` is `fdfind` (symlink it: `ln -s $(which fdfind) ~/.local/bin/fd`).
+> A **C compiler** (`cc`/clang/gcc) is needed for some parsers/tools — Xcode CLT on
+> macOS, `build-essential`/`gcc` on Linux. On Linux install a clipboard tool
+> (`xclip`/`wl-clipboard`); macOS has `pbcopy` built in.
+
+### 2. Python + Jupyter (for the notebook stack — molten)
+
+```bash
+python3 -m pip install --user pynvim jupyter jupyter-client ipykernel jupytext
+python3 -m ipykernel install --user --name python3
+```
+Then inside Neovim once: **`:UpdateRemotePlugins`** and restart.
+
+### 3. Inline plots (optional but recommended)
+
+`image.nvim` renders plots inline, which needs **ImageMagick** (above) *and* an
+image-capable terminal: **kitty**, **WezTerm**, or **Ghostty**. Without one,
+notebooks still work — you just get text output instead of rendered images.
+
+### 4. Language toolchains (only what you use)
+
+Rust (`rustup`), Go (`go`), a JDK (for Java), etc. Mason installs the *servers*
+(rust-analyzer, gopls, jdtls…), but they need the actual toolchain present.
+For the database UI, install the client CLI for your engine (`psql`, `mysql`, …).
 
 ---
 
 ## First-run notes
 
-- On first launch, plugins install automatically, and **treesitter parsers**
-  compile in the background (you'll briefly see `Downloading… / Compiling…`).
-- Run `:Mason` to watch/trigger LSP + tool installs; `:checkhealth` to diagnose.
+- On first launch plugins install automatically and **treesitter parsers** compile
+  in the background (you'll briefly see `Downloading… / Compiling…`).
+- `:Mason` — watch/trigger LSP + tool installs. `:checkhealth` — diagnose anything
+  red (check `vim.provider`, `molten`, `image`, `mason` sections).
+- For notebooks: after installing `pynvim`, run `:UpdateRemotePlugins` once.
 
 ---
 
@@ -175,13 +226,40 @@ edit) instead of diff-by-diff — gives you a file panel you tab through like a 
 | `<C-Space>` (normal/visual) | Start / expand incremental selection |
 | `]t` / `[t` | Next / previous TODO comment |
 
-### REPL / Notebooks (iron.nvim)
+### Jupyter notebooks (molten) — real inline execution + plots
+Open a `.ipynb` (jupytext turns it into an editable buffer) or a `.py`/`.qmd`.
+Needs the Python provider + Jupyter — see Prerequisites. `]n` / `[n` jump between cells.
+
+| Key | Action |
+|-----|--------|
+| `<leader>mi` | Initialise a Jupyter kernel |
+| `<leader>ml` | Evaluate current line |
+| `<leader>me` | Evaluate operator (motion) |
+| `<leader>mv` | Evaluate visual selection |
+| `<leader>mj` / `<leader>mJ` | Run cell & move / run cell |
+| `<leader>mc` | Re-evaluate current cell |
+| `<leader>mo` / `<leader>mh` | Show / hide output |
+| `<leader>md` | Delete cell output |
+| `<leader>mx` | Interrupt kernel |
+| `<leader>mb` | Open output in browser |
+| `]n` / `[n` | Next / previous cell |
+
+### REPL (iron.nvim — lightweight, no kernel needed)
 | Key | Action |
 |-----|--------|
 | `<Space>rs` / `<Space>rr` | Open / restart REPL |
 | `<Space>rf` / `<Space>rh` | Focus / hide REPL |
 | `<Space>isl` / `<Space>isp` / `<Space>isf` | Send line / paragraph / file |
 | `<Space>isc` | Send motion or visual selection |
+
+### Backend (databases + HTTP)
+| Key | Action |
+|-----|--------|
+| `<leader>bd` | Toggle Database UI (dadbod) |
+| `<leader>bf` | DB: find buffer |
+| `<leader>br` / `<leader>bR` | HTTP: run request / run all (in a `.http` file) |
+| `<leader>bn` / `<leader>bp` | HTTP: next / previous request |
+| `<leader>bc` / `<leader>bi` | HTTP: copy as curl / inspect request |
 
 ### AI (Claude Code)
 | Key | Action |

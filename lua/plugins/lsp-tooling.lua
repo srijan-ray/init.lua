@@ -27,10 +27,15 @@ return {
                 "html",
                 "cssls",
                 "jsonls",
+                "eslint",                 -- JS/TS linting
+                "emmet_language_server",  -- HTML/JSX/CSS expansion
                 -- Systems languages
                 "clangd",        -- C / C++
                 "rust_analyzer", -- Rust
                 "gopls",         -- Go
+                -- Backend / AWS / IaC
+                "yamlls",     -- YAML + CloudFormation/SAM/k8s/Actions (via SchemaStore)
+                "terraformls", -- Terraform / HCL
                 -- NOTE: Java (jdtls) is managed by nvim-java, so it is intentionally
                 -- not listed here.
             },
@@ -52,6 +57,7 @@ return {
             },
             { "j-hui/fidget.nvim", opts = {} },
             "saghen/blink.cmp",
+            "b0o/SchemaStore.nvim", -- JSON/YAML schemas (CloudFormation, Actions, k8s, package.json…)
         },
         config = function()
             -- Some UI edits
@@ -111,7 +117,36 @@ return {
             vim.lsp.enable("astro")
             vim.lsp.enable("html")
             vim.lsp.enable("cssls")
+            vim.lsp.enable("emmet_language_server")
+            vim.lsp.enable("eslint")
+
+            -- JSON with SchemaStore catalogue (package.json, tsconfig, etc.)
+            vim.lsp.config("jsonls", {
+                settings = {
+                    json = {
+                        schemas = require("schemastore").json.schemas(),
+                        validate = { enable = true },
+                    },
+                },
+            })
             vim.lsp.enable("jsonls")
+
+            -- YAML with SchemaStore (CloudFormation/SAM, GitHub Actions, k8s,
+            -- docker-compose, …). Disable yamlls' built-in schema store so the
+            -- richer SchemaStore catalogue is used instead.
+            vim.lsp.config("yamlls", {
+                settings = {
+                    yaml = {
+                        schemaStore = { enable = false, url = "" },
+                        schemas = require("schemastore").yaml.schemas(),
+                        keyOrdering = false,
+                    },
+                },
+            })
+            vim.lsp.enable("yamlls")
+
+            -- Terraform / HCL
+            vim.lsp.enable("terraformls")
 
             -- Systems languages
             vim.lsp.enable("clangd")

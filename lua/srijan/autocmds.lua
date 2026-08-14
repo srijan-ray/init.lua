@@ -3,6 +3,14 @@ local function augroup(name)
     return vim.api.nvim_create_augroup("srijan_" .. name, { clear = true })
 end
 
+-- Treat .http / .rest files as HTTP request files (drives kulala.nvim)
+vim.filetype.add({
+    extension = {
+        http = "http",
+        rest = "http",
+    },
+})
+
 -- Briefly highlight yanked text
 vim.api.nvim_create_autocmd("TextYankPost", {
     group = augroup("highlight_yank"),

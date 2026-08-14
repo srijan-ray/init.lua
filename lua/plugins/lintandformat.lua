@@ -31,6 +31,8 @@ return {
                 c = { "clang-format" },
                 cpp = { "clang-format" },
                 sh = { "shfmt" },
+                terraform = { "terraform_fmt" },
+                hcl = { "terraform_fmt" },
                 -- Web: use whichever formatter is available first
                 javascript = { "prettierd", "prettier", stop_after_first = true },
                 javascriptreact = { "prettierd", "prettier", stop_after_first = true },
